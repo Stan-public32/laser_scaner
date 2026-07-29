@@ -48,11 +48,3 @@ def get_z(a, b, x, y):
     z = float(a) * float(x) + float(b) * float(y) + 1.0
     return z
 
-output = get_params()
-a = output[0]
-b = output[1]
-x = 150
-y = 170
-z = get_z(a, b, x, y)
-string = str(a) + ' ' + str(b) + ' ' + str(x) + ' ' + str(y) + ' ' + str(z)
-print(string)
