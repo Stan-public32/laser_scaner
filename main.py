@@ -18,11 +18,11 @@ z = 0.0
 flag = 0
 
 matrix = np.full((height, width), 255, dtype=np.uint8)
-C_W = 80
-C_H = 80
+C_W = 66
+C_H = 66
 mask2 = np.full((C_H, C_W), 0, dtype=np.uint8)
 center = (C_H // 2, C_W // 2)
-radius = 20
+radius = 8
 
 yy, xx = np.ogrid[:C_H, :C_W]
 dist_sq = (xx - center[1])**2 + (yy - center[0])**2
@@ -43,9 +43,9 @@ while True:
     success, img_src = cap.read()
     img = img_src[:,:,2]
 
-    _, img = cv2.threshold(img, 220, 255, cv2.THRESH_TOZERO)
-    _, img = cv2.threshold(img, 230, 255, cv2.THRESH_TRUNC)
-    img = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX)
+    _, img = cv2.threshold(img, 253, 0, cv2.THRESH_TOZERO)
+    _, img = cv2.threshold(img, 254, 255, cv2.THRESH_TRUNC)
+    #img = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX)
     masr = cv2.matchTemplate(img, mask2, cv2.TM_SQDIFF)
     min_val, _, min_idx, _ = cv2.minMaxLoc(masr)
     j_min = int(min_idx[0])
