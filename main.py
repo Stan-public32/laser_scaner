@@ -2,9 +2,6 @@ import cv2
 import numpy as np
 import calibration as clb
 
-'''
-Video capture and process
-'''
 cap = cv2.VideoCapture(0)
 width = 640
 cap.set(3, width)
@@ -15,7 +12,10 @@ b = 0.0
 x = 0.0
 y = 0.0
 z = 0.0
+distance = 0
 flag = 0
+min_max = []
+int_sect = []
 
 matrix = np.full((height, width), 255, dtype=np.uint8)
 C_W = 66
@@ -41,15 +41,25 @@ hC_H = int(C_H/2)
 
 while True:
     success, img_src = cap.read()
-    img = img_src[:,:,2]
-
-    _, img = cv2.threshold(img, 253, 0, cv2.THRESH_TOZERO)
-    _, img = cv2.threshold(img, 254, 255, cv2.THRESH_TRUNC)
-    #img = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX)
-    masr = cv2.matchTemplate(img, mask2, cv2.TM_SQDIFF)
-    min_val, _, min_idx, _ = cv2.minMaxLoc(masr)
-    j_min = int(min_idx[0])
-    i_min = int(min_idx[1])
+    if flag != 1:
+        img = img_src[:,:,2]
+        _, img = cv2.threshold(img, 253, 0, cv2.THRESH_TOZERO)
+        _, img = cv2.threshold(img, 254, 255, cv2.THRESH_TRUNC)
+        #img = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX)
+        masr = cv2.matchTemplate(img, mask2, cv2.TM_SQDIFF)
+        min_val, _, min_idx, _ = cv2.minMaxLoc(masr)
+        j_min = int(min_idx[0])
+        i_min = int(min_idx[1])
+    else:
+        img = img_src[min_max[1][0]:min_max[1][1], min_max[0][0]:min_max[0][1], 2]
+        _, img = cv2.threshold(img, 253, 0, cv2.THRESH_TOZERO)
+        _, img = cv2.threshold(img, 254, 255, cv2.THRESH_TRUNC)
+        # img = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX)
+        masr = cv2.matchTemplate(img, mask2, cv2.TM_SQDIFF)
+        min_val, _, min_idx, _ = cv2.minMaxLoc(masr)
+        j_min = int(min_idx[0]) + min_max[0][0]
+        i_min = int(min_idx[1]) + min_max[1][0]
+        distance = int(clb.get_dist(int_sect[0][0], int_sect[0][1], int_sect[1][0], int_sect[1][1], j_min+hC_W, i_min+hC_H))
 
     #img_src = img
 
@@ -57,18 +67,22 @@ while True:
         x = float(j_min)
         y = float(i_min)
         z = clb.get_z(a, b, x, y)
-        outstr = 'x=' + str(j_min) + ' y=' + str(i_min) + ' dist=' + format(z, ".1f")
-        cv2.putText(img_src, outstr, (20, 50), cv2.FONT_HERSHEY_TRIPLEX, 0.5,
+        str_out = 'x=' + str(j_min) + ' y=' + str(i_min) + ' Z=' + format(z, ".1f")
+        cv2.putText(img_src, str_out, (20, 50), cv2.FONT_ITALIC, 0.5,
                  (255, 0, 0), 1)
+        str_out = 'dist=' + str(distance)
+        cv2.putText(img_src, str_out, (20, 70), cv2.FONT_ITALIC, 0.5,
+                    (255, 0, 0), 1)
+        cv2.line(img_src, int_sect[0], int_sect[1], (128,128,128), 1)
     else:
-        outstr = 'x=' + str(j_min) + ' y=' + str(i_min)
-        cv2.putText(img_src, outstr, (20, 50), cv2.FONT_HERSHEY_TRIPLEX, 0.5,
+        str_out = 'x=' + str(j_min) + ' y=' + str(i_min)
+        cv2.putText(img_src, str_out, (20, 50), cv2.FONT_ITALIC, 0.5,
                  (255, 0, 0), 1)
 
     cv2.rectangle(img_src, (j_min, i_min), (j_min+C_W, i_min+C_H), (0,255,0), 1)
     cv2.circle(img_src, (j_min+hC_W, i_min+hC_H), radius, (0, 255, 0), 1)
     min_val = float(min_val)/float(C_W*C_H)
-    cv2.putText(img_src, format(min_val, ".3f"), (20, 30), cv2.FONT_HERSHEY_TRIPLEX, 0.5,
+    cv2.putText(img_src, format(min_val, ".3f"), (20, 30), cv2.FONT_ITALIC, 0.5,
                  (255, 0, 0), 1)
 
     cv2.imshow('Output', img_src)
@@ -84,4 +98,12 @@ while True:
          with open('data.txt', 'a', encoding='utf-8') as f:
              f.writelines(lines)
     if key == ord('r'):
-         a, b, flag = clb.get_params()
+         a, b, flag, int_sect = clb.get_params(width, height)
+         if int_sect[0][0] > int_sect[1][0]:
+             min_max.append((int_sect[1][0], int_sect[0][0]))
+         else:
+             min_max.append((int_sect[0][0], int_sect[1][0]))
+         if int_sect[0][1] > int_sect[1][1]:
+             min_max.append((int_sect[1][1], int_sect[0][1]))
+         else:
+             min_max.append((int_sect[0][1], int_sect[1][1]))
