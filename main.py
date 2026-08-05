@@ -31,8 +31,8 @@ while True:
         #img = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX)
         masr = cv2.matchTemplate(img, mask2, cv2.TM_SQDIFF)
         min_val, _, min_idx, _ = cv2.minMaxLoc(masr)
-        j_min = int(min_idx[0])
-        i_min = int(min_idx[1])
+        j_min = int(min_idx[0]) + (C_W // 2)
+        i_min = int(min_idx[1]) + (C_H // 2)
     else:
         img = img_src[min_max[1][0]:min_max[1][1], min_max[0][0]:min_max[0][1], 2]
         _, img = cv2.threshold(img, 253, 0, cv2.THRESH_TOZERO)
@@ -40,9 +40,9 @@ while True:
         # img = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX)
         masr = cv2.matchTemplate(img, mask2, cv2.TM_SQDIFF)
         min_val, _, min_idx, _ = cv2.minMaxLoc(masr)
-        j_min = int(min_idx[0]) + min_max[0][0]
-        i_min = int(min_idx[1]) + min_max[1][0]
-        distance = int(clb.get_dist(int_sect[0][0], int_sect[0][1], int_sect[1][0], int_sect[1][1], (j_min+(C_W/2)), (i_min+(C_H/2))))
+        j_min = int(min_idx[0]) + min_max[0][0] + (C_W // 2)
+        i_min = int(min_idx[1]) + min_max[1][0] + (C_H // 2)
+        distance = int(clb.get_dist(int_sect[0][0], int_sect[0][1], int_sect[1][0], int_sect[1][1], j_min, i_min))
 
     #img_src = img
 
@@ -72,7 +72,7 @@ while True:
 
     if distance <= d_limit:
         cv2.rectangle(img_src, (j_min, i_min), (j_min+C_W, i_min+C_H), (0,255,0), 1)
-        cv2.circle(img_src, (int(j_min+(C_W/2)), int(i_min+(C_H/2))), radius, (0, 255, 0), 1)
+        cv2.circle(img_src, (j_min, i_min), radius, (0, 255, 0), 1)
     min_val = float(min_val)/float(C_W*C_H)
     str_out = 'fps=' + str(fps_counter) + ' error=' + format(min_val, ".1f")
     cv2.putText(img_src, str_out, (20, 30), cv2.FONT_ITALIC, 0.5,
