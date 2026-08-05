@@ -17,6 +17,7 @@ fps = 0
 flag = 0
 min_max = []
 int_sect = []
+cfs = []
 
 mask2 = clb.mask_calc(radius, C_W, C_H)
 seconds_counter = int(time.time())
@@ -50,7 +51,7 @@ while True:
         if distance <= d_limit:
             x = float(j_min)
             y = float(i_min)
-            z = clb.get_z(a, b, x, y)
+            z = clb.get_z(cfs[0], cfs[1], cfs[2], cfs[3], x)
             str_out = 'x=' + str(j_min) + ' y=' + str(i_min) + ' Z=' + format(z, ".1f")
             cv2.putText(img_src, str_out, (20, 50), cv2.FONT_ITALIC, 0.5,
                         (255, 0, 0), 1)
@@ -87,15 +88,23 @@ while True:
     if key == ord('q'):
          break
     if key == ord('1'):
-         lines = str(j_min) + ' ' + str(i_min) + ' ' + str(10.0) + '\n'
+         lines = str(j_min) + ' ' + str(i_min) + ' ' + str(1.0) + '\n'
          with open('data.txt', 'w', encoding='utf-8') as f:
              f.writelines(lines)
     if key == ord('2'):
-         lines = str(j_min) + ' ' + str(i_min) + ' ' + str(310.0) + '\n'
+         lines = str(j_min) + ' ' + str(i_min) + ' ' + str(91.0) + '\n'
+         with open('data.txt', 'a', encoding='utf-8') as f:
+             f.writelines(lines)
+    if key == ord('3'):
+         lines = str(j_min) + ' ' + str(i_min) + ' ' + str(181.0) + '\n'
+         with open('data.txt', 'a', encoding='utf-8') as f:
+             f.writelines(lines)
+    if key == ord('4'):
+         lines = str(j_min) + ' ' + str(i_min) + ' ' + str(271.0) + '\n'
          with open('data.txt', 'a', encoding='utf-8') as f:
              f.writelines(lines)
     if key == ord('r'):
-         a, b, flag, int_sect = clb.get_params(width, height)
+         a, b, flag, int_sect, cfs = clb.get_params(width, height)
          min_max = clb.get_min_max(int_sect)
     if key == ord(']'):
          radius += 1

@@ -63,15 +63,22 @@ def get_line_intersections(x1, y1, x2, y2, width, height):
 
 def get_params(width, height):
     numbers = []
-    a = 0
-    b = 0
-    check = 0
     x1 = 0
     y1 = 0
-    z1 = 0
     x2 = 0
     y2 = 0
-    z2 = 0
+    a = 0.0
+    b = 0.0
+    mx = 0.0
+    my = 0.0
+    sxx = 0.0
+    syy = 0.0
+    sxy = 0.0
+    check = 0.0
+    coords = [[0.0, 0.0, 0.0],
+              [0.0, 0.0, 0.0],
+              [0.0, 0.0, 0.0],
+              [0.0, 0.0, 0.0]]
     try:
         flag = -1
         with open('data.txt', 'r', encoding='utf-8') as f:
@@ -89,27 +96,41 @@ def get_params(width, height):
         print(f"Неожиданная ошибка: {e}")
         flag = 0
     else:
-        # Проверяем, что получилось ровно 6 чисел
-        if len(numbers) == 6:
-            x1 = float(numbers[0])
-            y1 = float(numbers[1])
-            z1 = float(numbers[2])
-            x2 = float(numbers[3])
-            y2 = float(numbers[4])
-            z2 = float(numbers[5])
-            check = (x1*y2 - x2*y1)
+        if len(numbers) == 12:
+            for i in range(12):
+                coords[i//3][i%3] = numbers[i]
+            for i in range(4):
+                mx += float(coords[i][0]) / 4.0
+                my += float(coords[i][1]) / 4.0
+            for i in range(4):
+                sxx += (float(coords[i][0]-mx) ** 2)
+                syy += (float(coords[i][1]-my) ** 2)
+                sxy += (float(coords[i][0]-mx) * float(coords[i][1]-my))
+            check = sxy
             flag = 1
         else:
             print(f"Ошибка: прочитано {len(numbers)} чисел, а ожидалось 6.")
             flag = 0
     if flag == 1 and check != 0:
-        a = (y2*(z1-1) - y1*(z2-1))/(x1*y2 - x2*y1)
-        b = (x1*(z2-1) - x2*(z1-1))/(x1*y2 - x2*y1)
+        temp = (sxx + syy - ((sxx-syy)**2 + 4*sxy*sxy)**0.5) / 2.0
+        a = sxy
+        b = temp - sxx
+        c = (-1.0) * (a*mx + b*my)
+        a = a / c
+        b = b / c
+        x1 = float(coords[0][0])
+        x2 = float(coords[3][0])
+        y1 = (-1.0) * (a * x1 + 1.0) / b
+        y2 = (-1.0) * (a * x2 + 1.0) / b
     intersections = get_line_intersections(x1, y1, x2, y2, width, height)
-    return a, b, flag, intersections
+    xx = np.array([coords[0][0], coords[1][0], coords[2][0], coords[3][0]])
+    zz = np.array([coords[0][2], coords[1][2], coords[2][2], coords[3][2]])
+    mtrx = np.vstack([xx ** 3, xx ** 2, xx, np.ones_like(xx)]).T
+    cfs = np.linalg.solve(mtrx, zz)
+    return a, b, flag, intersections, cfs
 
-def get_z(a, b, x, y):
-    z = float(a) * float(x) + float(b) * float(y) + 1.0
+def get_z(k, l, m, n, x):
+    z = float(k) * (float(x)**3) + float(l) * (float(x)**2) + float(m) * float(x) + float(n)
     return z
 
 def get_dist(x1, y1, x2, y2, x0, y0):
