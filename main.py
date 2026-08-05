@@ -1,43 +1,25 @@
 import cv2
-import numpy as np
+import time
 import calibration as clb
 
-cap = cv2.VideoCapture(0)
 width = 640
-cap.set(3, width)
 height = 480
+C_W = 66
+C_H = 66
+radius = 8
+d_limit = 20
+cap = cv2.VideoCapture(0)
+cap.set(3, width)
 cap.set(4, height)
-a = 0.0
-b = 0.0
-x = 0.0
-y = 0.0
-z = 0.0
 distance = 0
+fps_counter = 0
+fps = 0
 flag = 0
 min_max = []
 int_sect = []
 
-matrix = np.full((height, width), 255, dtype=np.uint8)
-C_W = 66
-C_H = 66
-mask2 = np.full((C_H, C_W), 0, dtype=np.uint8)
-center = (C_H // 2, C_W // 2)
-radius = 8
-
-yy, xx = np.ogrid[:C_H, :C_W]
-dist_sq = (xx - center[1])**2 + (yy - center[0])**2
-mask2[dist_sq <= radius**2] = 0
-
-for i in range(C_H):
-    for j in range(C_W):
-        if dist_sq[i, j] > radius**2:
-            mask2[i, j] = 0
-        else:
-            mask2[i, j] = 255
-
-masr = np.full((height-C_H, width-C_W), 0, dtype=np.int8)
-hC_W = int(C_W/2)
-hC_H = int(C_H/2)
+mask2 = clb.mask_calc(radius, C_W, C_H)
+seconds_counter = int(time.time())
 
 while True:
     success, img_src = cap.read()
@@ -59,33 +41,48 @@ while True:
         min_val, _, min_idx, _ = cv2.minMaxLoc(masr)
         j_min = int(min_idx[0]) + min_max[0][0]
         i_min = int(min_idx[1]) + min_max[1][0]
-        distance = int(clb.get_dist(int_sect[0][0], int_sect[0][1], int_sect[1][0], int_sect[1][1], j_min+hC_W, i_min+hC_H))
+        distance = int(clb.get_dist(int_sect[0][0], int_sect[0][1], int_sect[1][0], int_sect[1][1], (j_min+(C_W/2)), (i_min+(C_H/2))))
 
     #img_src = img
 
     if flag==1:
-        x = float(j_min)
-        y = float(i_min)
-        z = clb.get_z(a, b, x, y)
-        str_out = 'x=' + str(j_min) + ' y=' + str(i_min) + ' Z=' + format(z, ".1f")
-        cv2.putText(img_src, str_out, (20, 50), cv2.FONT_ITALIC, 0.5,
-                 (255, 0, 0), 1)
-        str_out = 'dist=' + str(distance)
-        cv2.putText(img_src, str_out, (20, 70), cv2.FONT_ITALIC, 0.5,
-                    (255, 0, 0), 1)
         cv2.line(img_src, int_sect[0], int_sect[1], (128,128,128), 1)
+        if distance <= d_limit:
+            x = float(j_min)
+            y = float(i_min)
+            z = clb.get_z(a, b, x, y)
+            str_out = 'x=' + str(j_min) + ' y=' + str(i_min) + ' Z=' + format(z, ".1f")
+            cv2.putText(img_src, str_out, (20, 50), cv2.FONT_ITALIC, 0.5,
+                        (255, 0, 0), 1)
+            str_out = 'dist=' + str(distance)
+            cv2.putText(img_src, str_out, (20, 70), cv2.FONT_ITALIC, 0.5,
+                        (255, 0, 0), 1)
+        else:
+            str_out = 'x= -  y= -  Z= - '
+            cv2.putText(img_src, str_out, (20, 50), cv2.FONT_ITALIC, 0.5,
+                        (255, 0, 0), 1)
+            str_out = 'dist=' + str(distance)
+            cv2.putText(img_src, str_out, (20, 70), cv2.FONT_ITALIC, 0.5,
+                        (255, 0, 0), 1)
     else:
         str_out = 'x=' + str(j_min) + ' y=' + str(i_min)
         cv2.putText(img_src, str_out, (20, 50), cv2.FONT_ITALIC, 0.5,
                  (255, 0, 0), 1)
 
-    cv2.rectangle(img_src, (j_min, i_min), (j_min+C_W, i_min+C_H), (0,255,0), 1)
-    cv2.circle(img_src, (j_min+hC_W, i_min+hC_H), radius, (0, 255, 0), 1)
+    if distance <= d_limit:
+        cv2.rectangle(img_src, (j_min, i_min), (j_min+C_W, i_min+C_H), (0,255,0), 1)
+        cv2.circle(img_src, (int(j_min+(C_W/2)), int(i_min+(C_H/2))), radius, (0, 255, 0), 1)
     min_val = float(min_val)/float(C_W*C_H)
-    cv2.putText(img_src, format(min_val, ".3f"), (20, 30), cv2.FONT_ITALIC, 0.5,
+    str_out = 'fps=' + str(fps_counter) + ' error=' + format(min_val, ".1f")
+    cv2.putText(img_src, str_out, (20, 30), cv2.FONT_ITALIC, 0.5,
                  (255, 0, 0), 1)
 
     cv2.imshow('Output', img_src)
+    if int(time.time()) > seconds_counter:
+        seconds_counter = int(time.time())
+        fps_counter = fps
+        fps = 0
+    fps += 1
     key = cv2.waitKey(1) & 0xFF
     if key == ord('q'):
          break
@@ -99,11 +96,18 @@ while True:
              f.writelines(lines)
     if key == ord('r'):
          a, b, flag, int_sect = clb.get_params(width, height)
-         if int_sect[0][0] > int_sect[1][0]:
-             min_max.append((int_sect[1][0], int_sect[0][0]))
-         else:
-             min_max.append((int_sect[0][0], int_sect[1][0]))
-         if int_sect[0][1] > int_sect[1][1]:
-             min_max.append((int_sect[1][1], int_sect[0][1]))
-         else:
-             min_max.append((int_sect[0][1], int_sect[1][1]))
+         min_max = clb.get_min_max(int_sect)
+    if key == ord(']'):
+         radius += 1
+         mask2 = clb.mask_calc(radius, C_W, C_H)
+    if key == ord('['):
+         radius -= 1
+         mask2 = clb.mask_calc(radius, C_W, C_H)
+    if key == ord('p'):
+         C_W += 2
+         C_H += 2
+         mask2 = clb.mask_calc(radius, C_W, C_H)
+    if key == ord('o'):
+         C_W -= 2
+         C_H -= 2
+         mask2 = clb.mask_calc(radius, C_W, C_H)

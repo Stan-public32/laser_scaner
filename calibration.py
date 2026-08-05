@@ -1,5 +1,24 @@
-import math
+import numpy as np
 
+def mask_calc(radius, width, height):
+    mask2 = np.full((width, height), 0, dtype=np.uint8)
+    center = (height // 2, width // 2)
+    yy, xx = np.ogrid[:height, :width]
+    dist_sq = (xx - center[1]) ** 2 + (yy - center[0]) ** 2
+    mask2[dist_sq <= radius ** 2] = 255
+    return mask2
+
+def get_min_max(int_sect):
+    min_max = []
+    if int_sect[0][0] > int_sect[1][0]:
+        min_max.append((int_sect[1][0], int_sect[0][0]))
+    else:
+        min_max.append((int_sect[0][0], int_sect[1][0]))
+    if int_sect[0][1] > int_sect[1][1]:
+        min_max.append((int_sect[1][1], int_sect[0][1]))
+    else:
+        min_max.append((int_sect[0][1], int_sect[1][1]))
+    return min_max
 
 def get_line_intersections(x1, y1, x2, y2, width, height):
     eps = 1e-9
@@ -96,4 +115,3 @@ def get_z(a, b, x, y):
 def get_dist(x1, y1, x2, y2, x0, y0):
     dist = abs((float(x2)-float(x1))*(float(y1)-float(y0)) - (float(x1)-float(x0))*(float(y2)-float(y1))) / (((float(x2) - float(x1))**2 + (float(y2) - float(y1)**2))**0.5)
     return dist
-
