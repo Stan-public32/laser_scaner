@@ -71,7 +71,7 @@ while True:
                  (255, 0, 0), 1)
 
     if distance <= d_limit:
-        cv2.rectangle(img_src, (j_min, i_min), (j_min+C_W, i_min+C_H), (0,255,0), 1)
+        cv2.rectangle(img_src, ((j_min-(C_W//2)), (i_min-(C_H//2))), ((j_min+(C_W//2)), (i_min+(C_H//2))), (0,255,0), 1)
         cv2.circle(img_src, (j_min, i_min), radius, (0, 255, 0), 1)
     min_val = float(min_val)/float(C_W*C_H)
     str_out = 'fps=' + str(fps_counter) + ' error=' + format(min_val, ".1f")
