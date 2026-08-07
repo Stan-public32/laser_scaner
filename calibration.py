@@ -1,57 +1,61 @@
 import numpy as np
 
+
 def data_file_operation(key, j_min, i_min):
     if key == ord('1'):
-         lines = str(j_min) + ' ' + str(i_min) + ' ' + str(1.0) + '\n'
-         with open('data.txt', 'w', encoding='utf-8') as f:
-             f.writelines(lines)
+        lines = str(j_min) + ' ' + str(i_min) + ' ' + str(1.0) + '\n'
+        with open('data.txt', 'w', encoding='utf-8') as f:
+            f.writelines(lines)
     if key == ord('2'):
-         lines = str(j_min) + ' ' + str(i_min) + ' ' + str(91.0) + '\n'
-         with open('data.txt', 'a', encoding='utf-8') as f:
-             f.writelines(lines)
+        lines = str(j_min) + ' ' + str(i_min) + ' ' + str(91.0) + '\n'
+        with open('data.txt', 'a', encoding='utf-8') as f:
+            f.writelines(lines)
     if key == ord('3'):
-         lines = str(j_min) + ' ' + str(i_min) + ' ' + str(181.0) + '\n'
-         with open('data.txt', 'a', encoding='utf-8') as f:
-             f.writelines(lines)
+        lines = str(j_min) + ' ' + str(i_min) + ' ' + str(181.0) + '\n'
+        with open('data.txt', 'a', encoding='utf-8') as f:
+            f.writelines(lines)
     if key == ord('4'):
-         lines = str(j_min) + ' ' + str(i_min) + ' ' + str(271.0) + '\n'
-         with open('data.txt', 'a', encoding='utf-8') as f:
-             f.writelines(lines)
+        lines = str(j_min) + ' ' + str(i_min) + ' ' + str(271.0) + '\n'
+        with open('data.txt', 'a', encoding='utf-8') as f:
+            f.writelines(lines)
+
 
 def resize_operation(key, radius, C_W, C_H, width, height):
     if key == ord(']'):
-         radius += 1
-         if radius > (C_W//2-2):
+        radius += 1
+        if radius > (C_W // 2 - 2):
             radius -= 1
-         mask2 = mask_calc(radius, C_W, C_H)
+        mask2 = mask_calc(radius, C_W, C_H)
     if key == ord('['):
-         radius -= 1
-         if radius < 3:
+        radius -= 1
+        if radius < 3:
             radius += 1
-         mask2 = mask_calc(radius, C_W, C_H)
+        mask2 = mask_calc(radius, C_W, C_H)
     if key == ord('p'):
-         C_W += 2
-         C_H += 2
-         if C_W > width//2 or C_H > height//2:
+        C_W += 2
+        C_H += 2
+        if C_W > width // 2 or C_H > height // 2:
             C_W -= 2
             C_H -= 2
-         mask2 = mask_calc(radius, C_W, C_H)
+        mask2 = mask_calc(radius, C_W, C_H)
     if key == ord('o'):
-         C_W -= 2
-         C_H -= 2
-         if C_W//2 < (radius + 4) or C_H//2 < (radius + 4):
+        C_W -= 2
+        C_H -= 2
+        if C_W // 2 < (radius + 4) or C_H // 2 < (radius + 4):
             C_W += 2
             C_H += 2
-         mask2 = mask_calc(radius, C_W, C_H)
+        mask2 = mask_calc(radius, C_W, C_H)
     return mask2, radius, C_W, C_H
+
 
 def mask_calc(radius, width, height):
     mask2 = np.full((width, height), 0, dtype=np.uint8)
     center = (height // 2, width // 2)
     yy, xx = np.ogrid[:height, :width]
-    dist_sq = (xx - center[1]) ** 2 + (yy - center[0]) ** 2
-    mask2[dist_sq <= radius ** 2] = 255
+    dist_sq = (xx - center[1])**2 + (yy - center[0])**2
+    mask2[dist_sq <= radius**2] = 255
     return mask2
+
 
 def get_min_max(int_sect):
     min_max = []
@@ -64,6 +68,7 @@ def get_min_max(int_sect):
     else:
         min_max.append((int_sect[0][1], int_sect[1][1]))
     return min_max
+
 
 def get_line_intersections(x1, y1, x2, y2, width, height):
     eps = 1e-9
@@ -79,20 +84,20 @@ def get_line_intersections(x1, y1, x2, y2, width, height):
     if abs(dx) > eps and abs(dy) > eps:
         t = (0.0 - x1) / dx
         y = y1 + t * dy
-        if 0 <= y <= height-1:
+        if 0 <= y <= height - 1:
             points.append((0, int(y)))
-        t = (width-1 - x1) / dx
+        t = (width - 1 - x1) / dx
         y = y1 + t * dy
-        if 0 <= y <= height-1:
-            points.append((int(width-1), int(y)))
+        if 0 <= y <= height - 1:
+            points.append((int(width - 1), int(y)))
         t = (0 - y1) / dy
         x = x1 + t * dx
-        if 0 <= x <= width-1:
+        if 0 <= x <= width - 1:
             points.append((int(x), 0))
         t = (height - y1) / dy
         x = x1 + t * dx
-        if 0 <= x <= width-1:
-            points.append((int(x), int(height-1)))
+        if 0 <= x <= width - 1:
+            points.append((int(x), int(height - 1)))
     # Если получилось больше двух точек (например, при совпадении с углами),
     # оставляем две крайние по параметру t вдоль направления прямой.
     if len(points) > 2:
@@ -106,12 +111,13 @@ def get_line_intersections(x1, y1, x2, y2, width, height):
         points = [sorted_points[0][1], sorted_points[-1][1]]
     return points
 
+
 def get_params(width, height):
     numbers = []
-    x1, y1, x2, y2, a, b, mx, my, ssx, syy, sxy, check = [0,0,0,0,0,0,0,0,0,0,0,0]
-    coords = [[0.0, 0.0, 0.0],
-              [0.0, 0.0, 0.0],
-              [0.0, 0.0, 0.0],
+    x1, y1, x2, y2, a, b, mx, my, ssx, syy, sxy, check = [
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    ]
+    coords = [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0],
               [0.0, 0.0, 0.0]]
     try:
         flag = -1
@@ -132,24 +138,24 @@ def get_params(width, height):
     else:
         if len(numbers) == 12:
             for i in range(12):
-                coords[i//3][i%3] = numbers[i]
+                coords[i // 3][i % 3] = numbers[i]
             for i in range(4):
                 mx += float(coords[i][0]) / 4.0
                 my += float(coords[i][1]) / 4.0
             for i in range(4):
-                sxx += (float(coords[i][0]-mx) ** 2)
-                syy += (float(coords[i][1]-my) ** 2)
-                sxy += (float(coords[i][0]-mx) * float(coords[i][1]-my))
+                sxx += (float(coords[i][0] - mx)**2)
+                syy += (float(coords[i][1] - my)**2)
+                sxy += (float(coords[i][0] - mx) * float(coords[i][1] - my))
             check = sxy
             flag = 1
         else:
             print(f"Ошибка: прочитано {len(numbers)} чисел, а ожидалось 6.")
             flag = 0
     if flag == 1 and check != 0:
-        temp = (sxx + syy - ((sxx-syy)**2 + 4*sxy*sxy)**0.5) / 2.0
+        temp = (sxx + syy - ((sxx - syy)**2 + 4 * sxy * sxy)**0.5) / 2.0
         a = sxy
         b = temp - sxx
-        c = (-1.0) * (a*mx + b*my)
+        c = (-1.0) * (a * mx + b * my)
         a = a / c
         b = b / c
         x1 = float(coords[0][0])
@@ -159,14 +165,20 @@ def get_params(width, height):
     intersections = get_line_intersections(x1, y1, x2, y2, width, height)
     xx = np.array([coords[0][0], coords[1][0], coords[2][0], coords[3][0]])
     zz = np.array([coords[0][2], coords[1][2], coords[2][2], coords[3][2]])
-    mtrx = np.vstack([xx ** 3, xx ** 2, xx, np.ones_like(xx)]).T
+    mtrx = np.vstack([xx**3, xx**2, xx, np.ones_like(xx)]).T
     cfs = np.linalg.solve(mtrx, zz)
     return a, b, flag, intersections, cfs
 
+
 def get_z(k, l, m, n, x):
-    z = float(k) * (float(x)**3) + float(l) * (float(x)**2) + float(m) * float(x) + float(n)
+    z = float(k) * (float(x)**3) + float(l) * (
+        float(x)**2) + float(m) * float(x) + float(n)
     return z
 
+
 def get_dist(x1, y1, x2, y2, x0, y0):
-    dist = abs((float(x2)-float(x1))*(float(y1)-float(y0)) - (float(x1)-float(x0))*(float(y2)-float(y1))) / (((float(x2) - float(x1))**2 + (float(y2) - float(y1)**2))**0.5)
+    dist = abs((float(x2) - float(x1)) * (float(y1) - float(y0)) -
+               (float(x1) - float(x0)) *
+               (float(y2) - float(y1))) / (((float(x2) - float(x1))**2 +
+                                            (float(y2) - float(y1)**2))**0.5)
     return dist
