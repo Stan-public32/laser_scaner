@@ -2,19 +2,12 @@ import cv2
 import time
 import calibration as clb
 
-width = 640
-height = 480
-C_W = 66
-C_H = 66
-radius = 8
-d_limit = 20
+width, height = [640, 480]
+C_W, C_H, radius, d_limit = [66, 66, 8, 20] 
 cap = cv2.VideoCapture(0)
 cap.set(3, width)
 cap.set(4, height)
-distance = 0
-fps_counter = 0
-fps = 0
-flag = 0
+distance, fps_counter, fps, flag = [0, 0, 0, 0]
 min_max = []
 int_sect = []
 cfs = []
@@ -27,7 +20,7 @@ while True:
     if flag != 1:
         img = img_src[:,:,2]
         _, img = cv2.threshold(img, 253, 0, cv2.THRESH_TOZERO)
-        _, img = cv2.threshold(img, 254, 255, cv2.THRESH_TRUNC)
+        #_, img = cv2.threshold(img, 254, 255, cv2.THRESH_TRUNC)
         #img = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX)
         masr = cv2.matchTemplate(img, mask2, cv2.TM_SQDIFF)
         min_val, _, min_idx, _ = cv2.minMaxLoc(masr)
@@ -36,7 +29,7 @@ while True:
     else:
         img = img_src[min_max[1][0]:min_max[1][1], min_max[0][0]:min_max[0][1], 2]
         _, img = cv2.threshold(img, 253, 0, cv2.THRESH_TOZERO)
-        _, img = cv2.threshold(img, 254, 255, cv2.THRESH_TRUNC)
+        #_, img = cv2.threshold(img, 254, 255, cv2.THRESH_TRUNC)
         # img = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX)
         masr = cv2.matchTemplate(img, mask2, cv2.TM_SQDIFF)
         min_val, _, min_idx, _ = cv2.minMaxLoc(masr)
@@ -85,38 +78,13 @@ while True:
         fps = 0
     fps += 1
     key = cv2.waitKey(1) & 0xFF
+
     if key == ord('q'):
          break
-    if key == ord('1'):
-         lines = str(j_min) + ' ' + str(i_min) + ' ' + str(1.0) + '\n'
-         with open('data.txt', 'w', encoding='utf-8') as f:
-             f.writelines(lines)
-    if key == ord('2'):
-         lines = str(j_min) + ' ' + str(i_min) + ' ' + str(91.0) + '\n'
-         with open('data.txt', 'a', encoding='utf-8') as f:
-             f.writelines(lines)
-    if key == ord('3'):
-         lines = str(j_min) + ' ' + str(i_min) + ' ' + str(181.0) + '\n'
-         with open('data.txt', 'a', encoding='utf-8') as f:
-             f.writelines(lines)
-    if key == ord('4'):
-         lines = str(j_min) + ' ' + str(i_min) + ' ' + str(271.0) + '\n'
-         with open('data.txt', 'a', encoding='utf-8') as f:
-             f.writelines(lines)
+    if key == ord('1') or key == ord('2') or key == ord('3') or key == ord('4'):
+         clb.data_file_operation(key, j_min, i_min)
     if key == ord('r'):
          a, b, flag, int_sect, cfs = clb.get_params(width, height)
          min_max = clb.get_min_max(int_sect)
-    if key == ord(']'):
-         radius += 1
-         mask2 = clb.mask_calc(radius, C_W, C_H)
-    if key == ord('['):
-         radius -= 1
-         mask2 = clb.mask_calc(radius, C_W, C_H)
-    if key == ord('p'):
-         C_W += 2
-         C_H += 2
-         mask2 = clb.mask_calc(radius, C_W, C_H)
-    if key == ord('o'):
-         C_W -= 2
-         C_H -= 2
-         mask2 = clb.mask_calc(radius, C_W, C_H)
+    if key == ord(']') or key == ord('[') or key == ord('p') or key == ord('o'):
+         mask2, radius, C_W, C_H = clb.resize_operation(key, radius, C_W, C_H, width, height)

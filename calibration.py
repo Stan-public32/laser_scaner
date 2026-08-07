@@ -1,5 +1,50 @@
 import numpy as np
 
+def data_file_operation(key, j_min, i_min):
+    if key == ord('1'):
+         lines = str(j_min) + ' ' + str(i_min) + ' ' + str(1.0) + '\n'
+         with open('data.txt', 'w', encoding='utf-8') as f:
+             f.writelines(lines)
+    if key == ord('2'):
+         lines = str(j_min) + ' ' + str(i_min) + ' ' + str(91.0) + '\n'
+         with open('data.txt', 'a', encoding='utf-8') as f:
+             f.writelines(lines)
+    if key == ord('3'):
+         lines = str(j_min) + ' ' + str(i_min) + ' ' + str(181.0) + '\n'
+         with open('data.txt', 'a', encoding='utf-8') as f:
+             f.writelines(lines)
+    if key == ord('4'):
+         lines = str(j_min) + ' ' + str(i_min) + ' ' + str(271.0) + '\n'
+         with open('data.txt', 'a', encoding='utf-8') as f:
+             f.writelines(lines)
+
+def resize_operation(key, radius, C_W, C_H, width, height):
+    if key == ord(']'):
+         radius += 1
+         if radius > (C_W//2-2):
+            radius -= 1
+         mask2 = mask_calc(radius, C_W, C_H)
+    if key == ord('['):
+         radius -= 1
+         if radius < 3:
+            radius += 1
+         mask2 = mask_calc(radius, C_W, C_H)
+    if key == ord('p'):
+         C_W += 2
+         C_H += 2
+         if C_W > width//2 or C_H > height//2:
+            C_W -= 2
+            C_H -= 2
+         mask2 = mask_calc(radius, C_W, C_H)
+    if key == ord('o'):
+         C_W -= 2
+         C_H -= 2
+         if C_W//2 < (radius + 4) or C_H//2 < (radius + 4):
+            C_W += 2
+            C_H += 2
+         mask2 = mask_calc(radius, C_W, C_H)
+    return mask2, radius, C_W, C_H
+
 def mask_calc(radius, width, height):
     mask2 = np.full((width, height), 0, dtype=np.uint8)
     center = (height // 2, width // 2)
@@ -63,18 +108,7 @@ def get_line_intersections(x1, y1, x2, y2, width, height):
 
 def get_params(width, height):
     numbers = []
-    x1 = 0
-    y1 = 0
-    x2 = 0
-    y2 = 0
-    a = 0.0
-    b = 0.0
-    mx = 0.0
-    my = 0.0
-    sxx = 0.0
-    syy = 0.0
-    sxy = 0.0
-    check = 0.0
+    x1, y1, x2, y2, a, b, mx, my, ssx, syy, sxy, check = [0,0,0,0,0,0,0,0,0,0,0,0]
     coords = [[0.0, 0.0, 0.0],
               [0.0, 0.0, 0.0],
               [0.0, 0.0, 0.0],
